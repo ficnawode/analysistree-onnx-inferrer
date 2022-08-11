@@ -74,7 +74,7 @@ Specifies the output file name where the root tree should be stored in.
 Specified the name of the tree inside the input and output file where the candidates are stored in.
 
 # Usage example
-In opython, given a trained XGBClassifier `model_clf`, we can export it to the *.onnx format using the [hipe4ml converter](https://github.com/fgrosa/hipe4ml_converter) (install with `pip install hipe4ml-converter`):
+In python, given a trained XGBClassifier `model_clf`, we can export it to the *.onnx format using the [hipe4ml converter](https://github.com/fgrosa/hipe4ml_converter) (install with `pip install hipe4ml-converter`):
 ```python
 features_for_train = ["Candidates_plain_chi2_geo", "Candidates_plain_chi2_prim_first", "Candidates_plain_chi2_prim_second", "Candidates_plain_distance", "Candidates_plain_l_over_dl", "Candidates_plain_mass2_first", "Candidates_plain_mass2_second"]
 model_conv = H4MLConverter(model_clf)
