@@ -1,92 +1,89 @@
 # at_tree_prediction_adder
 
-This program adds predictions of an ONNX model to an existing AnalysisTree using the topological features of its candidates.
+## General information
 
-## Getting started
+at_tree_prediction adder was developed to apply predictions of of a machine learning model described in the ONNX format to an existing AnalysisTree, using the topological values stored in its branch fields as input for the model.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Pre-requirements
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+Installation with c++ 17 standard is recommended.
 
-## Add your files
+### ONNX Runtime
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+ONNR Runtime is needed to compile and run the program. Get the precompiled version for your architecture here:
 
-```
-cd existing_repo
-git remote add origin https://git.cbm.gsi.de/apuntke/at_tree_prediction_adder.git
-git branch -M main
-git push -uf origin main
-```
+https://github.com/microsoft/onnxruntime/releases
 
-## Integrate with your tools
+After download, add the lib directory to your `$LD_LIBRARY_PATH` environment variable.
 
-- [ ] [Set up project integrations](https://git.cbm.gsi.de/apuntke/at_tree_prediction_adder/-/settings/integrations)
+### Root
 
-## Collaborate with your team
+ROOT6 is needed for installation:
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+https://root.cern/install/build_from_source/
 
-## Test and Deploy
+Follow instructions
+    
+### AnalysisTree
 
-Use the built-in continuous integration in GitLab.
+https://github.com/HeavyIonAnalysis/AnalysisTree
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+Follow instructions. Version since v2.2.0 is recommended.
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Clone at_tree_prediction_adder
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+    git clone https://git.cbm.gsi.de/apuntke/at_tree_prediction_adder.git src
+    
+Source ROOT
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+    source /path-to-root/install/bin/thisroot.sh
+    
+Export AnalysisTree libraries
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+    export AnalysisTree_DIR=/path-to-analysistree/install/lib/cmake/AnalysisTree
+	
+Export ONNX Runtime libraries
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+    export OnnxRuntime_DIR=/path-to-onnxruntime
+    
+Install at_tree_prediction_adder
+    
+    mkdir build
+    cd build
+    cmake -DCMAKE_INSTALL_PREFIX=../inst ../src
+	make -j install
+    
+  If you use c++ 17 standard also add cmake key -DCMAKE_CXX_STANDARD=17
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## Command-line arguments
+### --f <input-filelist>
+Specifies the input filelist.txt which is read into the program. It must contain a list of PFStimple AnalysisTree root files which should be processed.
+### --ib <branch-name>
+Specifies the name of the branch in the input file where the candidates for which the prediction should be made are stored in.
+### --ob <branch-name>
+Specifies the name of the output branch where the candidates including the prediction field should be saved. Must be different from input branch name.
+### --m <onnx-file>
+Specifies the *.onnx file where the model is stored in
+### --features <feature-list>
+Specifies the order and field names of the features which are put into the model in a comma-separated list.
+### --o <output-file>
+Specifies the output file name where the root tree should be stored in.
+### --t
+Specified the name of the tree inside the input and output file where the candidates are stored in.
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+# Usage example
+In opython, given a trained XGBClassifier `model_clf`, we can export it to the *.onnx format using the [hipe4ml converter](https://github.com/fgrosa/hipe4ml_converter) (install with `pip install hipe4ml-converter`):
+```python
+features_for_train = ["Candidates_plain_chi2_geo", "Candidates_plain_chi2_prim_first", "Candidates_plain_chi2_prim_second", "Candidates_plain_distance", "Candidates_plain_l_over_dl", "Candidates_plain_mass2_first", "Candidates_plain_mass2_second"]
+model_conv = H4MLConverter(model_clf)
+model_onnx = model_conv.convert_model_onnx(len(features_for_train))
+onnx_session = InferenceSession(model_onnx.SerializeToString())
+model_conv.dump_model_onnx("xgboost_lambda_classifier.onnx")
+```
+Next we run `at_tree_prediction_adder` with a filelist containing a file generated with [PFSimple](https://github.com/HeavyIonAnalysis/PFSimple) which candidates contain all the fields the model needs:
+```
+./at_tree_prediction_adder -f filelist.txt --ib Candidates_plain --ob Candidates_plainPredicted --m xgboost_lambda_classifier.onnx --features chi2_geo,chi2_prim_first,chi2_prim_second,distance,l_over_dl,mass2_first,mass2_second --o prediction_tree.root
+```
+Then you can analyze the outcoming file `prediction_tree.root` with AnalysisTreeQA and use the new candidate field `onnx_pred` (which should contain the signal probability) to apply cuts on.
