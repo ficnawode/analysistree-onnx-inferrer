@@ -31,6 +31,11 @@ int main(int argc, char** argv)
       output_branch_name = std::string(argv[++i]);
       printf("Output branch name: %s\n", output_branch_name.c_str());
     }
+    if (strcmp(argv[i], "--m") == 0)
+    {
+      model_file_name = std::string(argv[++i]);
+      printf("ONNX model file name: %s\n", model_file_name.c_str());
+    }
     if (strcmp(argv[i], "--features") == 0)
     {
       feature_field_names = std::string(argv[++i]);
