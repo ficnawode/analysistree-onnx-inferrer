@@ -13,7 +13,7 @@ void ATreePredictionAdder::Init()
   
   auto in_branch_cand = config_->GetBranchConfig(input_branch_name_);
   AnalysisTree::BranchConfig out_particles = in_branch_cand.Clone(output_branch_name_, in_branch_cand.GetType());
-  out_particles.AddField<float>("xgboost_pred", "");
+  out_particles.AddField<float>("onnx_pred", "");
   
   std::cout << "Input Branch Config:" << std::endl;
   in_branch_cand.Print();
@@ -70,7 +70,7 @@ void ATreePredictionAdder::Exec()
 
     // Add ONNX prediction
     float signal_prob = signal_probs[iCandidate];
-    output_particle.SetField(signal_prob, xgboost_pred_field_id_w_);
+    output_particle.SetField(signal_prob, onnx_pred_field_id_w_);
     
 
     // Copy all other fields for the candidate
@@ -88,9 +88,9 @@ void ATreePredictionAdder::Exec()
     bool mcIsSignal = (input_particle.GetField<int>(generation_field_id_r_) == 1);
     
     if (mcIsSignal)
-      output_particle.SetField(1.0f, xgboost_pred_field_id_w_);
+      output_particle.SetField(1.0f, onnx_pred_field_id_w_);
     else
-      output_particle.SetField(0.0f, xgboost_pred_field_id_w_);
+      output_particle.SetField(0.0f, onnx_pred_field_id_w_);
 */    
 
   }
@@ -108,7 +108,7 @@ void ATreePredictionAdder::InitIndices()
   auto out_config = AnalysisTree::TaskManager::GetInstance()->GetConfig();
   const auto& out_branch = out_config->GetBranchConfig(plain_branch_->GetId());
   
-  xgboost_pred_field_id_w_     = out_branch.GetFieldId("xgboost_pred");
+  onnx_pred_field_id_w_ = out_branch.GetFieldId("onnx_pred");
 }
 
 std::vector<std::string> ATreePredictionAdder::stringSplit(std::string s, std::string delimiter)

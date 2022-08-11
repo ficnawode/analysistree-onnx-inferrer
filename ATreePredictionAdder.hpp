@@ -46,7 +46,7 @@ protected:
   //*****************************
   
   //***** output fields *********
-  int xgboost_pred_field_id_w_{AnalysisTree::UndefValueInt};
+  int onnx_pred_field_id_w_{AnalysisTree::UndefValueInt};
   
   std::vector<std::string> stringSplit(std::string s, std::string delimiter);
   
