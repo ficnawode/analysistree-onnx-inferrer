@@ -42,6 +42,8 @@ protected:
   std::string model_file_name_{"model_onnx.onnx"};
   
   //**** input fields ***********
+  int mass2_first_field_id_r_{AnalysisTree::UndefValueInt};
+  int mass2_second_field_id_r_{AnalysisTree::UndefValueInt};
   //int generation_field_id_r_{AnalysisTree::UndefValueInt};
   //*****************************
   

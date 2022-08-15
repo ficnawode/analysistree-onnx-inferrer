@@ -50,7 +50,13 @@ void ATreePredictionAdder::Exec()
   for(auto& input_particle : *candidates_)
   {
     for(auto& feature_field_id : feature_field_ids_)
+    {
+      float feature_value = input_particle.GetField<float>(feature_field_id);
+      if (feature_value == -999.0f && (feature_field_id == mass2_first_field_id_r_ || feature_field_id == mass2_second_field_id_r_ ))
+          feature_value = nan("");
+      
       onnx_feature_values.push_back(input_particle.GetField<float>(feature_field_id));
+    }
   }
   
   std::vector<float> signal_probs = onnx_runner_->PredictBatch(onnx_feature_values);
@@ -103,6 +109,8 @@ void ATreePredictionAdder::InitIndices()
   for(auto& feature_field_name : feature_field_names_)
     feature_field_ids_.push_back(in_branch_cand.GetFieldId(feature_field_name));
   
+  mass2_first_field_id_r_       = in_branch_cand.GetFieldId("mass2_first");
+  mass2_second_field_id_r_       = in_branch_cand.GetFieldId("mass2_second");
   //generation_field_id_r_       = in_branch_cand.GetFieldId("generation");
     
   auto out_config = AnalysisTree::TaskManager::GetInstance()->GetConfig();

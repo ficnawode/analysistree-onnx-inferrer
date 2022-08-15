@@ -10,7 +10,7 @@ Installation with c++ 17 standard is recommended.
 
 ### ONNX Runtime
 
-ONNR Runtime is needed to compile and run the program. Get the precompiled version for your architecture here:
+ONNX Runtime is needed to compile and run the program. Get the precompiled version for your architecture here:
 
 https://github.com/microsoft/onnxruntime/releases
 
@@ -76,12 +76,21 @@ Specified the name of the tree inside the input and output file where the candid
 # Usage example
 In python, given a trained XGBClassifier `model_clf`, we can export it to the *.onnx format using the [hipe4ml converter](https://github.com/fgrosa/hipe4ml_converter) (install with `pip install hipe4ml-converter`):
 ```python
+import pickle
+from hipe4ml.model_handler import ModelHandler
 from hipe4ml_converter.h4ml_converter import H4MLConverter
+
 features_for_train = ["Candidates_plain_chi2_geo", "Candidates_plain_chi2_prim_first", "Candidates_plain_chi2_prim_second", "Candidates_plain_distance", "Candidates_plain_l_over_dl", "Candidates_plain_mass2_first", "Candidates_plain_mass2_second"]
-model_conv = H4MLConverter(model_clf)
+
+#load the already trained classifier from a pickle file
+model_clf = pickle.load(open('hipe4ml_for_lambda.pickle.dat', 'rb'))
+model_hdl = ModelHandler(model_clf, features_for_train)
+
+model_conv = H4MLConverter(model_hdl)
 model_onnx = model_conv.convert_model_onnx(len(features_for_train))
-onnx_session = InferenceSession(model_onnx.SerializeToString())
+
 model_conv.dump_model_onnx("xgboost_lambda_classifier.onnx")
+
 ```
 Next we run `at_tree_prediction_adder` with a filelist containing a file generated with [PFSimple](https://github.com/HeavyIonAnalysis/PFSimple) which candidates contain all the fields the model needs:
 ```
