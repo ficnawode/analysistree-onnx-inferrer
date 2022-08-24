@@ -30,7 +30,7 @@ void ATreePredictionAdder::Init()
   
   std::cout << "Loading ONNX model file " << model_file_name_ << std::endl;
   onnx_runner_ = new ONNXRunner();
-  onnx_runner_->Init(model_file_name_);
+  onnx_runner_->Init(model_file_name_, num_threads_);
   
   if (onnx_runner_->GetFeatureCount() != feature_field_ids_.size())
   {

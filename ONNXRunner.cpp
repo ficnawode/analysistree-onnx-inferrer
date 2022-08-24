@@ -27,10 +27,12 @@ int ONNXRunner::calculate_product(const std::vector<int64_t>& v)
   return total;
 }
 
-void ONNXRunner::Init(std::string model_file)
+void ONNXRunner::Init(std::string model_file, int num_threads)
 {
   env_ = new Ort::Env(ORT_LOGGING_LEVEL_WARNING, "atree-prediction-adder");
   Ort::SessionOptions session_options;
+  if (num_threads > 0)
+    session_options.SetIntraOpNumThreads(num_threads);
   session_ = new Ort::Experimental::Session(*env_, model_file, session_options);
   
   auto input_names = session_->GetInputNames();

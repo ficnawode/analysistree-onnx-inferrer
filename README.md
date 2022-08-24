@@ -70,8 +70,10 @@ Specifies the *.onnx file where the model is stored in
 Specifies the order and field names of the features which are put into the model in a comma-separated list.
 ### --o <output-file>
 Specifies the output file name where the root tree should be stored in.
-### --t
-Specified the name of the tree inside the input and output file where the candidates are stored in.
+### --t <tree-name>
+Specifies the name of the tree inside the input and output file where the candidates are stored in.
+### --num_threads <number-of-onnx-threads>
+Specifies the number of threads ONNX should use. This option may be neccessary when used inside a slurm environment, because the number of cores cannot be determined in the usual way automatically.
 
 # Usage example
 In python, given a trained XGBClassifier `model_clf`, we can export it to the *.onnx format using the [hipe4ml converter](https://github.com/fgrosa/hipe4ml_converter) (install with `pip install hipe4ml-converter`):
@@ -94,6 +96,6 @@ model_conv.dump_model_onnx("xgboost_lambda_classifier.onnx")
 ```
 Next we run `at_tree_prediction_adder` with a filelist containing a file generated with [PFSimple](https://github.com/HeavyIonAnalysis/PFSimple) which candidates contain all the fields the model needs:
 ```
-./at_tree_prediction_adder -f filelist.txt --ib Candidates_plain --ob Candidates_plainPredicted --m xgboost_lambda_classifier.onnx --features chi2_geo,chi2_prim_first,chi2_prim_second,distance,l_over_dl,mass2_first,mass2_second --o prediction_tree.root
+./at_tree_prediction_adder --f filelist.txt --ib Candidates_plain --ob Candidates_plainPredicted --m xgboost_lambda_classifier.onnx --features chi2_geo,chi2_prim_first,chi2_prim_second,distance,l_over_dl,mass2_first,mass2_second --o prediction_tree.root
 ```
 Then you can analyze the outcoming file `prediction_tree.root` with AnalysisTreeQA and use the new candidate field `onnx_pred` (which should contain the signal probability) to apply cuts on.

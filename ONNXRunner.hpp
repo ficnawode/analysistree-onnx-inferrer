@@ -18,7 +18,7 @@ class ONNXRunner {
   ONNXRunner();
   ~ONNXRunner() = default;
  
-  void Init(std::string model_file);
+  void Init(std::string model_file, int num_threads = -1);
   float PredictSingleInstance(std::vector<float> feature_values);
   std::vector<float> PredictBatch(std::vector<float> feature_values);
   int GetFeatureCount() {return feature_count_;}

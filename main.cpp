@@ -13,6 +13,7 @@ int main(int argc, char** argv)
   std::string feature_field_names = "chi2_geo,chi2_prim_first,chi2_prim_second,distance,l_over_dl,mass2_first,mass2_second";
   std::string output_file = "prediction_tree.root";
   std::string tree_name = "pTree";
+  int num_threads = -1;
   
   for (int i = 1; i < argc; ++i)
   {
@@ -51,6 +52,11 @@ int main(int argc, char** argv)
       tree_name = std::string(argv[++i]);
       printf("Tree name: %s\n", tree_name.c_str());
     }
+    if (strcmp(argv[i], "--num_threads") == 0)
+    {
+      num_threads = atoi(argv[++i]);
+      printf("Number of ONNX threads: %d\n", num_threads);
+    }
   }
 
   const bool make_plain_ttree{true};
@@ -65,6 +71,7 @@ int main(int argc, char** argv)
   at_prediction_adder_task->SetOutputBranchName(output_branch_name);
   at_prediction_adder_task->SetModelFileName(model_file_name);
   at_prediction_adder_task->SetFeatureFieldNames(feature_field_names);
+  at_prediction_adder_task->SetNumThreads(num_threads);
   
   man->AddTask(at_prediction_adder_task);
   man->Init({filename_pfs}, {tree_name});

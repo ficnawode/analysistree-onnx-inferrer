@@ -23,6 +23,7 @@ class ATreePredictionAdder : public AnalysisTree::Task {
   void SetOutputBranchName(std::string output_branch_name) {output_branch_name_ = output_branch_name;}
   void SetFeatureFieldNames(std::string feature_field_name_arg) {feature_field_names_ = stringSplit(feature_field_name_arg, ",");}
   void SetModelFileName(std::string model_file_name) {model_file_name_ = model_file_name;}
+  void SetNumThreads(int num_threads) {num_threads_ = num_threads;}
   
 protected:
   ONNXRunner* onnx_runner_;
@@ -40,6 +41,7 @@ protected:
   std::vector<std::string> feature_field_names_;
   std::vector<int> feature_field_ids_;
   std::string model_file_name_{"model_onnx.onnx"};
+  int num_threads_ = -1;
   
   //**** input fields ***********
   int mass2_first_field_id_r_{AnalysisTree::UndefValueInt};
