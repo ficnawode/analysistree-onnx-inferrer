@@ -76,6 +76,9 @@ add_library(libonnxruntime STATIC IMPORTED)
 # Provide the full path to the library, so CMake knows where to find it.
 set_target_properties(libonnxruntime PROPERTIES IMPORTED_LOCATION $ENV{OnnxRuntime_DIR}/lib/libonnxruntime.so)
 target_link_libraries(ATPA libonnxruntime)
+
+find_package(Boost 1.78 REQUIRED COMPONENTS json)
+target_link_libraries(ATPA  Boost::json)
 #END ONNX
 
 add_executable(at_tree_prediction_adder main.cpp)

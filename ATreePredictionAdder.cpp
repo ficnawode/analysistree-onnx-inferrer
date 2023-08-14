@@ -1,5 +1,6 @@
 #include "ATreePredictionAdder.hpp"
 #include "AnalysisTree/TaskManager.hpp"
+#include "boost/json.hpp"
 
 void ATreePredictionAdder::Init()
 {
@@ -18,16 +19,21 @@ void ATreePredictionAdder::Init()
   InitModel();
   FillOutputTensorShape();
   FillOutputTensorSize();
+  FillOutputFieldNames();
 
-  out_particles.AddField<float>("onnx_pred", "");
+  for (auto name : output_field_names_)
+  {
+    out_particles.AddField<float>(name.c_str(), "");
+    std::cout << "Field added: " << name << std::endl;
+  }
 
   std::cout << "Input Branch Config:" << std::endl;
   in_branch_cand.Print();
 
+  man->AddBranch(plain_branch_, out_particles);
+
   std::cout << "Output Branch Config:" << std::endl;
   out_particles.Print();
-
-  man->AddBranch(plain_branch_, out_particles);
 
   if (cuts_)
     cuts_->Init(*out_config);
@@ -43,6 +49,19 @@ void ATreePredictionAdder::FillOutputTensorShape()
 void ATreePredictionAdder::FillOutputTensorSize()
 {
   output_tensor_buffer_size_ = output_tensor_shape_[0] * output_tensor_shape_[1];
+}
+
+void ATreePredictionAdder::FillOutputFieldNames()
+{
+  for (int i = 0; i < output_tensor_shape_[0]; i++)
+  {
+    for (int j = 0; j < output_tensor_shape_[1]; j++)
+    {
+
+      std::string field_name = "onnx_pred_" + std::to_string(i) + '_' + std::to_string(j);
+      output_field_names_.push_back(field_name);
+    }
+  }
 }
 
 void ATreePredictionAdder::InitFeatureIds()
@@ -76,7 +95,6 @@ void ATreePredictionAdder::Exec()
   auto *man = AnalysisTree::TaskManager::GetInstance();
   auto *chain = man->GetChain();
   std::vector<std::vector<float>> onnxFeatureValues;
-  std::cout << candidates_->GetNumberOfChannels() << std::endl;
 
   for (auto &input_particle : *candidates_)
   {
@@ -110,7 +128,8 @@ void ATreePredictionAdder::Exec()
 
     // Add ONNX prediction
     auto outputTensor = outputTensors[iCandidate];
-    output_particle.SetField(outputTensor[2], onnx_pred_field_id_w_);
+    SetTensorFields(output_particle, outputTensor);
+    // output_particle.SetField(outputTensor[2], onnx_pred_field_id_w_);
 
     // Copy all other fields for the candidate
     for (const auto &field : in_branch_cand.GetMap<float>())
@@ -134,17 +153,21 @@ void ATreePredictionAdder::Exec()
   }
 }
 
+void ATreePredictionAdder::SetTensorFields(AnalysisTree::Particle particle, std::vector<float> tensor)
+{
+  assert(tensor.size() == output_tensor_buffer_size_);
+  for (size_t i = 0; i < output_tensor_buffer_size_; i++)
+  {
+    particle.SetField(tensor[i], output_field_ids_[i]);
+  }
+}
+
 std::vector<std::vector<float>> ATreePredictionAdder::ExecGetONNXFeatureValues()
 {
-  auto *man = AnalysisTree::TaskManager::GetInstance();
-  auto *chain = man->GetChain();
-  chain->GetEntry(0);
   std::vector<std::vector<float>> onnxFeatureValues;
-  std::cout << candidates_->GetNumberOfChannels() << std::endl;
 
   for (auto &input_particle : *candidates_)
   {
-    assert(false);
     std::vector<float> particle_feature_values;
     for (auto &feature_field_id : feature_field_ids_)
     {
@@ -171,7 +194,11 @@ void ATreePredictionAdder::InitIndices()
   auto out_config = AnalysisTree::TaskManager::GetInstance()->GetConfig();
   const auto &out_branch = out_config->GetBranchConfig(plain_branch_->GetId());
 
-  onnx_pred_field_id_w_ = out_branch.GetFieldId("onnx_pred");
+  for (auto name : output_field_names_)
+  {
+    int temp_id = out_branch.GetFieldId(name);
+    output_field_ids_.push_back(temp_id);
+  }
 }
 
 std::vector<std::string> ATreePredictionAdder::stringSplit(std::string s, std::string delimiter)

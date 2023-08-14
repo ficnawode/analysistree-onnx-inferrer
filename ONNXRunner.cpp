@@ -91,8 +91,6 @@ std::vector<float> ONNXRunner::PredictSingleInstance(std::vector<float> &feature
     auto tensorShape = session_->GetOutputShapes()[1];
     size_t tensorDataArrLen = tensorShape[0] * tensorShape[1];
 
-    std::cout
-        << tensorShape[0] << tensorShape[1] << std::endl;
     float *output_tensor_values = output_tensors[1].GetTensorMutableData<float>();
     std::vector<float> tensorVals;
     for (int i = 0; i < tensorDataArrLen; i++)
@@ -140,7 +138,7 @@ std::vector<float> ONNXRunner::PredictBatch(std::vector<float> feature_values)
 
   int tensor_count = ceil((1.0 * candidate_count) / candidates_per_tensor);
 
-  printf("Predicting %d candidates with %d tensors\n", candidate_count, tensor_count);
+  // printf("Predicting %d candidates with %d tensors\n", candidate_count, tensor_count);
 
   for (int iTensor = 0; iTensor < tensor_count; ++iTensor)
   {

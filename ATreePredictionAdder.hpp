@@ -58,13 +58,16 @@ protected:
 private:
   std::array<size_t, 2> output_tensor_shape_;
   size_t output_tensor_buffer_size_;
-  std::vector<std::string> tensor_field_names_;
+  std::vector<std::string> output_field_names_;
+  std::vector<int> output_field_ids_;
 
   void InitFeatureIds();
   void InitModel();
 
   void FillOutputTensorShape();
   void FillOutputTensorSize();
+  void FillOutputFieldNames();
+  void SetTensorFields(AnalysisTree::Particle particle, std::vector<float> tensor);
   std::vector<std::vector<float>> ExecGetONNXFeatureValues();
 };
 #endif // ATREEPREDICTIONADDER_HPP
