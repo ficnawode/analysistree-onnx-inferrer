@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(ATPA CXX)
 if(NOT DEFINED CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 set(PROJECT_VERSION 1.0)
 
@@ -40,6 +40,7 @@ find_package(ROOT REQUIRED RIO)
 if (ROOT_FOUND)
     message(STATUS "Using ROOT: ${ROOT_VERSION} <${ROOT_CONFIG}>")
     include_directories(${CMAKE_SOURCE_DIR} ${ROOT_INCLUDE_DIR} ${ROOT_INCLUDE_DIRS})
+    include_directories($ENV{OnnxRuntime_DIR}/include)
     include(${ROOT_USE_FILE})
 endif (ROOT_FOUND)
 
@@ -70,11 +71,10 @@ add_target_property(ATPA COMPILE_FLAGS "-DDO_TPCCATRACKER_EFF_PERFORMANCE")
 #set(ONNXRUNTIME_ROOTDIR "onnxruntime-linux-x64")
 #include_directories("${ONNXRUNTIME_ROOTDIR}/include" "${ONNXRUNTIME_ROOTDIR}/include/onnxruntime/core/session")
 #link_directories("${ONNXRUNTIME_ROOTDIR}/lib")
-add_library(libonnxruntime SHARED IMPORTED)
+add_library(libonnxruntime STATIC IMPORTED)
 
 # Provide the full path to the library, so CMake knows where to find it.
 set_target_properties(libonnxruntime PROPERTIES IMPORTED_LOCATION $ENV{OnnxRuntime_DIR}/lib/libonnxruntime.so)
-
 target_link_libraries(ATPA libonnxruntime)
 #END ONNX
 
