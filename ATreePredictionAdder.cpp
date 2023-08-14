@@ -16,6 +16,8 @@ void ATreePredictionAdder::Init()
 
   InitFeatureIds();
   InitModel();
+  FillOutputTensorShape();
+  FillOutputTensorSize();
 
   out_particles.AddField<float>("onnx_pred", "");
 
@@ -35,9 +37,12 @@ void ATreePredictionAdder::Init()
 
 void ATreePredictionAdder::FillOutputTensorShape()
 {
+  output_tensor_shape_ = onnx_runner_->GetOutputTensorShape();
 }
+
 void ATreePredictionAdder::FillOutputTensorSize()
 {
+  output_tensor_buffer_size_ = output_tensor_shape_[0] * output_tensor_shape_[1];
 }
 
 void ATreePredictionAdder::InitFeatureIds()
@@ -67,7 +72,26 @@ void ATreePredictionAdder::Exec()
   auto out_config = AnalysisTree::TaskManager::GetInstance()->GetConfig();
 
   // Predict probabilities with ONNX model and save to signal_probs vector
-  auto onnxFeatureValues = ExecGetONNXFeatureValues();
+
+  auto *man = AnalysisTree::TaskManager::GetInstance();
+  auto *chain = man->GetChain();
+  std::vector<std::vector<float>> onnxFeatureValues;
+  std::cout << candidates_->GetNumberOfChannels() << std::endl;
+
+  for (auto &input_particle : *candidates_)
+  {
+    std::vector<float> particle_feature_values;
+    for (auto &feature_field_id : feature_field_ids_)
+    {
+      float feature_value = input_particle.GetField<float>(feature_field_id);
+      if (feature_value == -999.0f && (feature_field_id == mass2_first_field_id_r_ || feature_field_id == mass2_second_field_id_r_))
+        feature_value = nan("");
+
+      particle_feature_values.push_back(feature_value);
+    }
+    onnxFeatureValues.push_back(particle_feature_values);
+  }
+  // assert(onnxFeatureValues.size() > 0);
 
   auto outputTensors = onnx_runner_->PredictMany(onnxFeatureValues);
 
@@ -112,9 +136,15 @@ void ATreePredictionAdder::Exec()
 
 std::vector<std::vector<float>> ATreePredictionAdder::ExecGetONNXFeatureValues()
 {
-  std::vector<std::vector<float>> onnx_feature_values;
+  auto *man = AnalysisTree::TaskManager::GetInstance();
+  auto *chain = man->GetChain();
+  chain->GetEntry(0);
+  std::vector<std::vector<float>> onnxFeatureValues;
+  std::cout << candidates_->GetNumberOfChannels() << std::endl;
+
   for (auto &input_particle : *candidates_)
   {
+    assert(false);
     std::vector<float> particle_feature_values;
     for (auto &feature_field_id : feature_field_ids_)
     {
@@ -124,10 +154,10 @@ std::vector<std::vector<float>> ATreePredictionAdder::ExecGetONNXFeatureValues()
 
       particle_feature_values.push_back(feature_value);
     }
-    onnx_feature_values.push_back(particle_feature_values);
+    onnxFeatureValues.push_back(particle_feature_values);
   }
-  assert(onnx_feature_values.size() > 0);
-  return onnx_feature_values;
+  assert(onnxFeatureValues.size() > 0);
+  return onnxFeatureValues;
 }
 
 void ATreePredictionAdder::InitIndices()

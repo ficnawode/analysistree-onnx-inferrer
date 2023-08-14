@@ -113,7 +113,6 @@ std::vector<float> ONNXRunner::PredictSingleInstance(std::vector<float> &feature
 
 std::vector<std::vector<float>> ONNXRunner::PredictMany(std::vector<std::vector<float>> &featureValsArr)
 {
-  assert(featureValsArr.size() > 0);
   std::vector<std::vector<float>>
       tensorArr;
   for (auto &featureVals : featureValsArr)
@@ -122,7 +121,6 @@ std::vector<std::vector<float>> ONNXRunner::PredictMany(std::vector<std::vector<
     assert(tensor.size() > 0);
     tensorArr.push_back(tensor);
   }
-  assert(tensorArr.size() > 0);
   return tensorArr;
 }
 
