@@ -20,6 +20,7 @@ public:
 
   void InitIndices();
 
+  void SetCuts(AnalysisTree::Cuts *cuts) { cuts_ = cuts; }
   void SetInputBranchName(std::string input_branch_name) { input_branch_name_ = input_branch_name; }
   void SetOutputBranchName(std::string output_branch_name) { output_branch_name_ = output_branch_name; }
   void SetFeatureFieldNames(std::string feature_field_name_arg) { feature_field_names_ = stringSplit(feature_field_name_arg, ","); }
@@ -36,6 +37,8 @@ private:
 
   // output branch
   AnalysisTree::Particles *out_branch_{nullptr};
+
+  AnalysisTree::Cuts *cuts_{nullptr};
 
   std::string input_branch_name_{"Candidates_plain"};
   std::string output_branch_name_{"Candidates_plainPredicted"};

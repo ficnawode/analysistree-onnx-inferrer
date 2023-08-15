@@ -10,7 +10,7 @@ void ATreePredictionAdder::Init()
 
   in_branch_ = ANALYSISTREE_UTILS_GET<AnalysisTree::Particles *>(chain->GetPointerToBranch(input_branch_name_));
 
-  auto out_config = AnalysisTree::TaskManager::GetInstance()->GetConfig();
+  auto instance_config = AnalysisTree::TaskManager::GetInstance()->GetConfig();
 
   auto in_branch_config = config_->GetBranchConfig(input_branch_name_);
   std::string momentum_name = "p";
@@ -33,6 +33,9 @@ void ATreePredictionAdder::Init()
   in_branch_config.Print();
 
   man->AddBranch(out_branch_, out_branch_config);
+
+  if (cuts_)
+    cuts_->Init(*instance_config);
 
   std::cout << "Output Branch Config:" << std::endl;
   out_branch_config.Print();
@@ -83,6 +86,10 @@ void ATreePredictionAdder::Exec()
   // Add predictions to output candidates
   for (auto &input_particle : *in_branch_)
   {
+    if (cuts_ && !cuts_->Apply(input_particle))
+    {
+      continue;
+    }
 
     std::vector<float> features;
     for (auto &feature_field_id : feature_field_ids_)
