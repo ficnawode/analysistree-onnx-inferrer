@@ -1,5 +1,6 @@
 #include "ONNXSingleBinModel.hpp"
 #include <iostream>
+#include <unistd.h>
 
 ONNXSingleBinModel::ONNXSingleBinModel(float min, float max, std::string model_file_path, size_t num_features, size_t num_threads) : min_{min}, max_{max}, num_threads_{num_threads}, num_features_{num_features}, model_file_path_{model_file_path}
 {
@@ -29,5 +30,7 @@ void ONNXSingleBinModel::InitRunner()
 
 std::vector<float> ONNXSingleBinModel::InferSingle(std::vector<float> &feature_values)
 {
-    return onnx_runner_->PredictSingleInstance(feature_values);
+    auto tensorVals = onnx_runner_->PredictSingleInstance(feature_values);
+
+    return tensorVals;
 }

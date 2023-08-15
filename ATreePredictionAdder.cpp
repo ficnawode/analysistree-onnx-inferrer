@@ -139,13 +139,14 @@ void ATreePredictionAdder::Exec()
   }
 }
 
-void ATreePredictionAdder::SetTensorFields(AnalysisTree::Particle particle, std::vector<float> tensor)
+void ATreePredictionAdder::SetTensorFields(AnalysisTree::Particle &particle, std::vector<float> tensor)
 {
   if (tensor.size() != output_tensor_buffer_size_)
   {
     std::string error_message = std::to_string(tensor.size()) + "!=" + std::to_string(output_tensor_buffer_size_);
     throw std::runtime_error(error_message);
   }
+
   for (size_t i = 0; i < output_tensor_buffer_size_; i++)
   {
     particle.SetField(tensor[i], output_field_ids_[i]);

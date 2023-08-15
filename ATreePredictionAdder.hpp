@@ -70,7 +70,7 @@ private:
   void FillOutputTensorShape();
   void FillOutputTensorSize();
   void FillOutputFieldNames();
-  void SetTensorFields(AnalysisTree::Particle particle, std::vector<float> tensor);
+  void SetTensorFields(AnalysisTree::Particle &particle, std::vector<float> tensor);
   std::vector<std::vector<float>> ExecGetONNXFeatureValues();
 };
 #endif // ATREEPREDICTIONADDER_HPP
