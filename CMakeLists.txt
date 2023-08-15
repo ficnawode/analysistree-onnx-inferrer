@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.20)
 project(ATPA CXX)
 if(NOT DEFINED CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
@@ -49,6 +49,9 @@ include_directories(${CMAKE_SOURCE_DIR} ${AnalysisTree_INCLUDE_DIR})
 #************
 set(SOURCES
   ATreePredictionAdder.cpp
+  ONNXConfigParser.cpp
+  ONNXConfigManager.cpp
+  ONNXSingleBinModel.cpp
   ONNXRunner.cpp
   )
 
@@ -62,23 +65,14 @@ if(ROOT_FOUND)
 endif(ROOT_FOUND)  
 add_target_property(ATPA COMPILE_FLAGS "-DDO_TPCCATRACKER_EFF_PERFORMANCE")
 
-#ONNX
-#set(ONNXRUNTIME_ROOTDIR "onnxruntime-linux-x64")
-#include_directories("${ONNXRUNTIME_ROOTDIR}/include" "${ONNXRUNTIME_ROOTDIR}/include/onnxruntime/core/session")
-#link_directories("${ONNXRUNTIME_ROOTDIR}/lib")
-#target_link_libraries(ATPA ${CMAKE_CURRENT_SOURCE_DIR}/${ONNXRUNTIME_ROOTDIR}/lib/libonnxruntime.so)
-
-#set(ONNXRUNTIME_ROOTDIR "onnxruntime-linux-x64")
-#include_directories("${ONNXRUNTIME_ROOTDIR}/include" "${ONNXRUNTIME_ROOTDIR}/include/onnxruntime/core/session")
-#link_directories("${ONNXRUNTIME_ROOTDIR}/lib")
+#BEGIN ONNX
 add_library(libonnxruntime STATIC IMPORTED)
-
 # Provide the full path to the library, so CMake knows where to find it.
 set_target_properties(libonnxruntime PROPERTIES IMPORTED_LOCATION $ENV{OnnxRuntime_DIR}/lib/libonnxruntime.so)
 target_link_libraries(ATPA libonnxruntime)
 
 find_package(Boost 1.78 REQUIRED COMPONENTS json)
-target_link_libraries(ATPA  Boost::json)
+target_link_libraries(ATPA Boost::boost Boost::json)
 #END ONNX
 
 add_executable(at_tree_prediction_adder main.cpp)

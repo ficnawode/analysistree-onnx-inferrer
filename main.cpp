@@ -1,11 +1,11 @@
 #include "ATreePredictionAdder.hpp"
 
+#include "ONNXConfigManager.hpp"
 #include "AnalysisTree/TaskManager.hpp"
 #include "AnalysisTree/PlainTreeFiller.hpp"
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-
   std::string filename_pfs = "filelist.txt";
   std::string input_branch_name = "Candidates_plain";
   std::string output_branch_name = "Candidates_plainPredicted";
@@ -13,8 +13,9 @@ int main(int argc, char** argv)
   std::string feature_field_names = "chi2_geo,chi2_prim_first,chi2_prim_second,distance,l_over_dl,mass2_first,mass2_second";
   std::string output_file = "prediction_tree.root";
   std::string tree_name = "pTree";
+  std::string onnx_config_path = "/lustre/cbm/users/tfic/pid/onnx_20230809_154703/onnx_config.json";
   int num_threads = -1;
-  
+
   for (int i = 1; i < argc; ++i)
   {
     if (strcmp(argv[i], "--f") == 0)
@@ -57,47 +58,28 @@ int main(int argc, char** argv)
       num_threads = atoi(argv[++i]);
       printf("Number of ONNX threads: %d\n", num_threads);
     }
+    if (strcmp(argv[i], "--config") == 0)
+    {
+      onnx_config_path = atoi(argv[++i]);
+      printf("Path to ONNX inferrer config: %s\n", onnx_config_path);
+    }
   }
 
-  const bool make_plain_ttree{true};
- 
-  //const std::string& filename_pfs = argv[1];  
-  
-  auto* man = AnalysisTree::TaskManager::GetInstance();
+  auto *man = AnalysisTree::TaskManager::GetInstance();
   man->SetOutputName(output_file, tree_name);
-  auto* at_prediction_adder_task = new ATreePredictionAdder();
-  
+  auto *at_prediction_adder_task = new ATreePredictionAdder();
+
   at_prediction_adder_task->SetInputBranchName(input_branch_name);
   at_prediction_adder_task->SetOutputBranchName(output_branch_name);
   at_prediction_adder_task->SetModelFileName(model_file_name);
   at_prediction_adder_task->SetFeatureFieldNames(feature_field_names);
   at_prediction_adder_task->SetNumThreads(num_threads);
-  
+  at_prediction_adder_task->SetONNXConfigPath(onnx_config_path);
+
   man->AddTask(at_prediction_adder_task);
   man->Init({filename_pfs}, {tree_name});
-  man->Run(-1);// -1 = all events
+  man->Run(-1); // -1 = all events
   man->Finish();
-  /*
-  if(make_plain_ttree)
-  {
-    man->ClearTasks();
-    std::ofstream filelist;
-    filelist.open("filelist.txt");
-    filelist << "intermediate_tree.root\n";
-    filelist.close();
-        
-    auto* tree_task = new AnalysisTree::PlainTreeFiller();
-    std::string branchname_rec = "Candidates_plain";
-    tree_task->SetInputBranchNames({branchname_rec});
-    tree_task->SetOutputName("analysis_plain_ttree.root", "plain_tree");
-    tree_task->AddBranch(branchname_rec);
 
-    man->AddTask(tree_task);
-
-    man->Init({"filelist.txt"}, {"pTree"});
-    man->Run(-1);// -1 = all events
-    man->Finish();    
-  }  
-  */
-  return EXIT_SUCCESS;  
+  return EXIT_SUCCESS;
 }
