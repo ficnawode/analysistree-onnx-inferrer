@@ -29,21 +29,16 @@ std::vector<float> ONNXConfigManager::InferSingle(std::vector<float> features, f
     return zeros;
 }
 
-std::vector<std::vector<float>> ONNXConfigManager::InferMultiple(std::vector<std::vector<float>> features, std::vector<float> momentums)
+std::vector<std::vector<float>> ONNXConfigManager::InferMultiple(std::vector<std::vector<float>> features_vector, std::vector<float> momentums)
 {
-    assert(features.size() == momentums.size());
-    std::vector<std::vector<float>>
-        inferred_values;
-    for (size_t i = 0; i < features.size(); i++)
+    assert(features_vector.size() == momentums.size());
+    std::vector<std::vector<float>> inferred_tensors;
+    for (size_t i = 0; i < features_vector.size(); i++)
     {
-        inferred_values.push_back(InferSingle(features[i], momentums[i]));
+        inferred_tensors.push_back(InferSingle(features_vector[i], momentums[i]));
     }
-    return inferred_values;
+    return inferred_tensors;
 }
-
-std::vector<std::string> ONNXConfigManager::GetFeatureFieldNames() { return feature_field_names_; }
-std::array<size_t, 2> ONNXConfigManager::GetOutputTensorShape() { return output_tensor_shape_; }
-size_t ONNXConfigManager::GetOutputTensorSize() { return output_tensor_size_; }
 
 void ONNXConfigManager::LoadBinModels(std::vector<BinConfig> bin_configs)
 {

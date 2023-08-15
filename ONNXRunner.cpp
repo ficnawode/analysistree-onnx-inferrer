@@ -3,14 +3,12 @@
 #include <sstream>
 #include <cassert>
 #include <math.h>
-#include <unistd.h>
-// #include <experimental_onnxruntime_cxx_api.h>
+#include <cstring>
 
 ONNXRunner::ONNXRunner()
 {
 }
 
-// pretty prints a shape dimension vector
 std::string ONNXRunner::print_shape(const std::vector<int64_t> &v)
 {
   std::stringstream ss("");
@@ -51,6 +49,7 @@ void ONNXRunner::Init(std::string model_file, int num_threads)
   auto output_shapes = session_->GetOutputShapes();
 
   output_tensor_shape_ = {output_shapes[1][0], output_shapes[1][1]};
+  output_tensor_size_ = output_tensor_shape_[0] * output_tensor_shape_[1];
   std::cout << "Output Node Name/Shape (" << output_names.size() << "):" << std::endl;
   for (size_t i = 0; i < output_names.size(); i++)
   {
@@ -60,11 +59,6 @@ void ONNXRunner::Init(std::string model_file, int num_threads)
   auto input_shape = input_shapes[0];
   total_number_of_elements_per_run_ = calculate_product(input_shape);
   feature_count_ = input_shape[0];
-}
-
-std::array<size_t, 2> ONNXRunner::GetOutputTensorShape()
-{
-  return output_tensor_shape_;
 }
 
 std::vector<float> ONNXRunner::PredictSingleInstance(std::vector<float> &feature_values)
@@ -88,18 +82,10 @@ std::vector<float> ONNXRunner::PredictSingleInstance(std::vector<float> &feature
   try
   {
     auto output_tensors = session_->Run(session_->GetInputNames(), input_tensors, session_->GetOutputNames());
-
-    auto tensorShape = session_->GetOutputShapes()[1];
-    size_t tensorDataArrLen = tensorShape[0] * tensorShape[1];
-
-    float *output_tensor_values = output_tensors[1].GetTensorMutableData<float>();
-    std::vector<float> tensorVals;
-    for (int i = 0; i < tensorDataArrLen; i++)
-    {
-      tensorVals.push_back(output_tensor_values[i]);
-    }
-
-    return tensorVals;
+    float *tensor_data = output_tensors[1].GetTensorMutableData<float>();
+    std::vector<float> tensor(output_tensor_size_);
+    std::memcpy(tensor.data(), tensor_data, output_tensor_size_);
+    return tensor;
   }
   catch (const Ort::Exception &exception)
   {
@@ -110,15 +96,14 @@ std::vector<float> ONNXRunner::PredictSingleInstance(std::vector<float> &feature
   return {};
 }
 
-std::vector<std::vector<float>> ONNXRunner::PredictMany(std::vector<std::vector<float>> &featureValsArr)
+std::vector<std::vector<float>> ONNXRunner::PredictMany(std::vector<std::vector<float>> &feature_values_vector)
 {
-  std::vector<std::vector<float>>
-      tensorArr;
-  for (auto &featureVals : featureValsArr)
+  std::vector<std::vector<float>> tensor_vector;
+  for (auto &feature_values : feature_values_vector)
   {
-    auto tensor = PredictSingleInstance(featureVals);
+    auto tensor = PredictSingleInstance(feature_values);
     assert(tensor.size() > 0);
-    tensorArr.push_back(tensor);
+    tensor_vector.push_back(tensor);
   }
-  return tensorArr;
+  return tensor_vector;
 }

@@ -6,7 +6,7 @@ ONNXSingleBinModel::ONNXSingleBinModel(float min, float max, std::string model_f
 {
     InitRunner();
     output_tensor_shape_ = onnx_runner_->GetOutputTensorShape();
-    output_tensor_size_ = output_tensor_shape_[0] * output_tensor_shape_[1];
+    output_tensor_size_ = onnx_runner_->GetOutputTensorSize();
 }
 
 float ONNXSingleBinModel::GetMin() { return min_; }

@@ -58,6 +58,11 @@ int main(int argc, char **argv)
       num_threads = atoi(argv[++i]);
       printf("Number of ONNX threads: %d\n", num_threads);
     }
+    if (strcmp(argv[i], "--config") == 0)
+    {
+      onnx_config_path = atoi(argv[++i]);
+      printf("Path to ONNX inferrer config: %s\n", onnx_config_path);
+    }
   }
 
   auto *man = AnalysisTree::TaskManager::GetInstance();
@@ -75,27 +80,6 @@ int main(int argc, char **argv)
   man->Init({filename_pfs}, {tree_name});
   man->Run(-1); // -1 = all events
   man->Finish();
-  /*
-  if(make_plain_ttree)
-  {
-    man->ClearTasks();
-    std::ofstream filelist;
-    filelist.open("filelist.txt");
-    filelist << "intermediate_tree.root\n";
-    filelist.close();
 
-    auto* tree_task = new AnalysisTree::PlainTreeFiller();
-    std::string branchname_rec = "Candidates_plain";
-    tree_task->SetInputBranchNames({branchname_rec});
-    tree_task->SetOutputName("analysis_plain_ttree.root", "plain_tree");
-    tree_task->AddBranch(branchname_rec);
-
-    man->AddTask(tree_task);
-
-    man->Init({"filelist.txt"}, {"pTree"});
-    man->Run(-1);// -1 = all events
-    man->Finish();
-  }
-  */
   return EXIT_SUCCESS;
 }

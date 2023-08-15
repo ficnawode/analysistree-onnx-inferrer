@@ -20,7 +20,6 @@ public:
 
   void InitIndices();
 
-  void SetCuts(AnalysisTree::Cuts *cuts) { cuts_ = cuts; }
   void SetInputBranchName(std::string input_branch_name) { input_branch_name_ = input_branch_name; }
   void SetOutputBranchName(std::string output_branch_name) { output_branch_name_ = output_branch_name; }
   void SetFeatureFieldNames(std::string feature_field_name_arg) { feature_field_names_ = stringSplit(feature_field_name_arg, ","); }
@@ -28,17 +27,15 @@ public:
   void SetNumThreads(int num_threads) { num_threads_ = num_threads; }
   void SetONNXConfigPath(std::string onnx_config_path) { onnx_config_path_ = onnx_config_path; }
 
-protected:
+private:
   ONNXConfigManager *onnx_model_manager_{nullptr};
   std::string onnx_config_path_;
 
-  // input branches
-  AnalysisTree::Particles *candidates_{nullptr};
+  // input branch
+  AnalysisTree::Particles *in_branch_{nullptr};
 
   // output branch
-  AnalysisTree::Particles *plain_branch_{nullptr};
-
-  AnalysisTree::Cuts *cuts_{nullptr};
+  AnalysisTree::Particles *out_branch_{nullptr};
 
   std::string input_branch_name_{"Candidates_plain"};
   std::string output_branch_name_{"Candidates_plainPredicted"};
@@ -54,11 +51,8 @@ protected:
   //*****************************
 
   //***** output fields *********
-  int onnx_pred_field_id_w_{AnalysisTree::UndefValueInt};
 
   std::vector<std::string> stringSplit(std::string s, std::string delimiter);
-
-private:
   std::array<size_t, 2> output_tensor_shape_;
   size_t output_tensor_buffer_size_;
   std::vector<std::string> output_field_names_;

@@ -8,14 +8,14 @@ void ATreePredictionAdder::Init()
   auto *man = AnalysisTree::TaskManager::GetInstance();
   auto *chain = man->GetChain();
 
-  candidates_ = ANALYSISTREE_UTILS_GET<AnalysisTree::Particles *>(chain->GetPointerToBranch(input_branch_name_));
+  in_branch_ = ANALYSISTREE_UTILS_GET<AnalysisTree::Particles *>(chain->GetPointerToBranch(input_branch_name_));
 
   auto out_config = AnalysisTree::TaskManager::GetInstance()->GetConfig();
 
-  auto in_branch_cand = config_->GetBranchConfig(input_branch_name_);
+  auto in_branch_config = config_->GetBranchConfig(input_branch_name_);
   std::string momentum_name = "p";
-  momentum_id_ = in_branch_cand.GetFieldId(momentum_name);
-  AnalysisTree::BranchConfig out_particles = in_branch_cand.Clone(output_branch_name_, in_branch_cand.GetType());
+  momentum_id_ = in_branch_config.GetFieldId(momentum_name);
+  AnalysisTree::BranchConfig out_branch_config = in_branch_config.Clone(output_branch_name_, in_branch_config.GetType());
 
   InitFeatureIds();
   InitModel();
@@ -25,20 +25,17 @@ void ATreePredictionAdder::Init()
 
   for (auto name : output_field_names_)
   {
-    out_particles.AddField<float>(name.c_str(), "");
+    out_branch_config.AddField<float>(name.c_str(), "");
     std::cout << "Field added: " << name << std::endl;
   }
 
   std::cout << "Input Branch Config:" << std::endl;
-  in_branch_cand.Print();
+  in_branch_config.Print();
 
-  man->AddBranch(plain_branch_, out_particles);
+  man->AddBranch(out_branch_, out_branch_config);
 
   std::cout << "Output Branch Config:" << std::endl;
-  out_particles.Print();
-
-  if (cuts_)
-    cuts_->Init(*out_config);
+  out_branch_config.Print();
 
   InitIndices();
 }
@@ -68,9 +65,9 @@ void ATreePredictionAdder::FillOutputFieldNames()
 
 void ATreePredictionAdder::InitFeatureIds()
 {
-  auto in_branch_cand = config_->GetBranchConfig(input_branch_name_);
+  auto in_branch_config = config_->GetBranchConfig(input_branch_name_);
   for (auto &feature_field_name : feature_field_names_)
-    feature_field_ids_.push_back(in_branch_cand.GetFieldId(feature_field_name));
+    feature_field_ids_.push_back(in_branch_config.GetFieldId(feature_field_name));
 }
 
 void ATreePredictionAdder::InitModel()
@@ -80,61 +77,39 @@ void ATreePredictionAdder::InitModel()
 
 void ATreePredictionAdder::Exec()
 {
-  plain_branch_->ClearChannels();
-
+  out_branch_->ClearChannels();
   auto out_config = AnalysisTree::TaskManager::GetInstance()->GetConfig();
-
-  // Predict probabilities with ONNX model and save to signal_probs vector
-
-  auto *man = AnalysisTree::TaskManager::GetInstance();
-  auto *chain = man->GetChain();
-  std::vector<std::vector<float>> onnxFeatureValues;
-  std::vector<float> onnxMomentumValues;
-
-  for (auto &input_particle : *candidates_)
+  auto in_branch_config = config_->GetBranchConfig(input_branch_name_);
+  // Add predictions to output candidates
+  for (auto &input_particle : *in_branch_)
   {
-    std::vector<float> particle_feature_values;
+
+    std::vector<float> features;
     for (auto &feature_field_id : feature_field_ids_)
     {
       float feature_value = input_particle.GetField<float>(feature_field_id);
       if (feature_value == -999.0f && (feature_field_id == mass2_first_field_id_r_ || feature_field_id == mass2_second_field_id_r_))
+      {
         feature_value = nan("");
+      }
 
-      particle_feature_values.push_back(feature_value);
+      features.push_back(feature_value);
     }
-    float momentum_value = input_particle.GetField<float>(momentum_id_);
-    onnxFeatureValues.push_back(particle_feature_values);
-    onnxMomentumValues.push_back(momentum_value);
-  }
-
-  auto outputTensors = onnx_model_manager_->InferMultiple(onnxFeatureValues, onnxMomentumValues);
-
-  // Add predictions to output candidates
-  auto in_branch_cand = config_->GetBranchConfig(input_branch_name_);
-  int iCandidate = -1;
-
-  for (auto &input_particle : *candidates_)
-  {
-    ++iCandidate;
-    if (cuts_)
-      if (!cuts_->Apply(input_particle))
-        continue;
-
-    auto &output_particle = plain_branch_->AddChannel(out_config->GetBranchConfig(plain_branch_->GetId()));
+    float momentum = input_particle.GetField<float>(momentum_id_);
 
     // Add ONNX prediction
-    auto outputTensor = outputTensors[iCandidate];
-    SetTensorFields(output_particle, outputTensor);
-    // output_particle.SetField(outputTensor[2], onnx_pred_field_id_w_);
+    auto output_tensor = onnx_model_manager_->InferSingle(features, momentum);
+    auto &output_particle = out_branch_->AddChannel(out_config->GetBranchConfig(out_branch_->GetId()));
+    SetTensorFields(output_particle, output_tensor);
 
     // Copy all other fields for the candidate
-    for (const auto &field : in_branch_cand.GetMap<float>())
+    for (const auto &field : in_branch_config.GetMap<float>())
       output_particle.SetField(input_particle.GetField<float>(field.second.id_), field.second.id_);
 
-    for (const auto &field : in_branch_cand.GetMap<int>())
+    for (const auto &field : in_branch_config.GetMap<int>())
       output_particle.SetField(input_particle.GetField<int>(field.second.id_), field.second.id_);
 
-    for (const auto &field : in_branch_cand.GetMap<bool>())
+    for (const auto &field : in_branch_config.GetMap<bool>())
       output_particle.SetField(input_particle.GetField<bool>(field.second.id_), field.second.id_);
   }
 }
@@ -157,7 +132,7 @@ std::vector<std::vector<float>> ATreePredictionAdder::ExecGetONNXFeatureValues()
 {
   std::vector<std::vector<float>> onnxFeatureValues;
 
-  for (auto &input_particle : *candidates_)
+  for (auto &input_particle : *in_branch_)
   {
     std::vector<float> particle_feature_values;
     for (auto &feature_field_id : feature_field_ids_)
@@ -176,18 +151,18 @@ std::vector<std::vector<float>> ATreePredictionAdder::ExecGetONNXFeatureValues()
 
 void ATreePredictionAdder::InitIndices()
 {
-  auto in_branch_cand = config_->GetBranchConfig(input_branch_name_);
+  auto in_branch_config = config_->GetBranchConfig(input_branch_name_);
 
-  mass2_first_field_id_r_ = in_branch_cand.GetFieldId("mass2_first");
-  mass2_second_field_id_r_ = in_branch_cand.GetFieldId("mass2_second");
-  // generation_field_id_r_       = in_branch_cand.GetFieldId("generation");
+  mass2_first_field_id_r_ = in_branch_config.GetFieldId("mass2_first");
+  mass2_second_field_id_r_ = in_branch_config.GetFieldId("mass2_second");
+  // generation_field_id_r_       = in_branch_config.GetFieldId("generation");
 
   auto out_config = AnalysisTree::TaskManager::GetInstance()->GetConfig();
-  const auto &out_branch = out_config->GetBranchConfig(plain_branch_->GetId());
+  const auto &out_branch_config = out_config->GetBranchConfig(out_branch_->GetId());
 
   for (auto name : output_field_names_)
   {
-    int temp_id = out_branch.GetFieldId(name);
+    int temp_id = out_branch_config.GetFieldId(name);
     output_field_ids_.push_back(temp_id);
   }
 }
