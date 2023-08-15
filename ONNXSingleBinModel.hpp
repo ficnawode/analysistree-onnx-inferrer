@@ -6,7 +6,7 @@ class ONNXSingleBinModel
 {
 public:
     ONNXSingleBinModel(float min, float max, std::string model_path);
-    ~ONNXSingleBinModel();
+    ~ONNXSingleBinModel() = default;
 
     float GetMin();
     float GetMax();
