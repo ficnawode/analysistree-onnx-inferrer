@@ -23,7 +23,6 @@ public:
 
   void Init(std::string model_file, int num_threads = -1);
   std::vector<float> PredictSingleInstance(std::vector<float> &feature_values);
-  std::vector<float> PredictBatch(std::vector<float> feature_values);
   std::vector<std::vector<float>> PredictMany(std::vector<std::vector<float>> &feature_values);
   int GetFeatureCount() { return feature_count_; }
   std::array<size_t, 2> GetOutputTensorShape();
