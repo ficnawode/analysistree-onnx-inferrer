@@ -1,23 +1,29 @@
 #include "ONNXConfigManager.hpp"
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
+#include "ONNXConfigParser.hpp"
 
 #include <iostream>
 
-ONNXConfigManager::ONNXConfigManager(std::string json_config_path) : json_config_path_{json_config_path}
+ONNXConfigManager::ONNXConfigManager(std::string json_config_path)
 {
-    auto bin_configs = ParseBinConfigs(json_config_path_);
+    auto parser = ONNXConfigParser(json_config_path);
+    feature_field_names_ = parser.ParseModelFeatures();
+    auto bin_configs = parser.ParseBinConfigs();
+
     LoadBinModels(bin_configs);
+    assert(bin_models_.size() > 0);
+
+    output_tensor_shape_ = bin_models_[0].GetOutputTensorShape();
+    output_tensor_size_ = bin_models_[0].GetOutputTensorSize();
 }
 
 std::vector<float> ONNXConfigManager::InferSingle(std::vector<float> features, float momentum)
 {
     for (auto &bin_model : bin_models_)
     {
-        // if (momentum > bin_model.GetMin() && momentum <= bin_model.GetMax())
-        // {
-        // return bin_model.PredictSingleInstance(features);
-        // }
+        if (momentum > bin_model.GetMin() && momentum <= bin_model.GetMax())
+        {
+            return bin_model.InferSingle(features);
+        }
     }
     return {};
 }
@@ -34,28 +40,19 @@ std::vector<std::vector<float>> ONNXConfigManager::InferMultiple(std::vector<std
     return inferred_values;
 }
 
-std::vector<ONNXConfigManager::BinConfig> ONNXConfigManager::ParseBinConfigs(std::string json_config_path)
-{
-    namespace pt = boost::property_tree;
-    std::vector<BinConfig> bin_configs;
-    pt::ptree root;
-    pt::read_json(json_config_path, root);
-    for (pt::ptree::value_type &model_dict_val : root.get_child("model_paths"))
-    {
-        pt::ptree model_dict = model_dict_val.second;
-        float min = model_dict.get<float>("lo");
-        float max = model_dict.get<float>("hi");
-        std::string path = model_dict.get<std::string>("path");
+std::vector<std::string> ONNXConfigManager::GetFeatureFieldNames() { return feature_field_names_; }
+std::array<size_t, 2> ONNXConfigManager::GetOutputTensorShape() { return output_tensor_shape_; }
+size_t ONNXConfigManager::GetOutputTensorSize() { return output_tensor_size_; }
 
-        BinConfig bin_config{min, max, path};
-        bin_configs.push_back(bin_config);
-    }
-    std::cout << "Loaded ranges and paths from " << json_config_path << ':' << std::endl;
+void ONNXConfigManager::LoadBinModels(std::vector<BinConfig> bin_configs)
+{
+    size_t num_features = feature_field_names_.size();
     for (auto &config : bin_configs)
     {
-        std::cout << '(' << config.min << " : " << config.max << ']' << " -> " << config.path << std::endl;
+        auto min = config.min;
+        auto max = config.max;
+        auto path = config.path;
+        auto bin_model = ONNXSingleBinModel(min, max, path, num_features);
+        bin_models_.push_back(bin_model);
     }
-    return bin_configs;
 }
-
-void ONNXConfigManager::LoadBinModels(std::vector<ONNXConfigManager::BinConfig>) {}

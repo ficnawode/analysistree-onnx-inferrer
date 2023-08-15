@@ -49,6 +49,7 @@ include_directories(${CMAKE_SOURCE_DIR} ${AnalysisTree_INCLUDE_DIR})
 #************
 set(SOURCES
   ATreePredictionAdder.cpp
+  ONNXConfigParser.cpp
   ONNXConfigManager.cpp
   ONNXSingleBinModel.cpp
   ONNXRunner.cpp

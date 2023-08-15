@@ -140,16 +140,6 @@ void ATreePredictionAdder::Exec()
 
     for (const auto &field : in_branch_cand.GetMap<bool>())
       output_particle.SetField(input_particle.GetField<bool>(field.second.id_), field.second.id_);
-
-    /*
-        //for test:
-        bool mcIsSignal = (input_particle.GetField<int>(generation_field_id_r_) == 1);
-
-        if (mcIsSignal)
-          output_particle.SetField(1.0f, onnx_pred_field_id_w_);
-        else
-          output_particle.SetField(0.0f, onnx_pred_field_id_w_);
-    */
   }
 }
 

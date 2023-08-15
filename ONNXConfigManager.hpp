@@ -1,4 +1,5 @@
 #pragma once
+#include "ONNXConfigParser.hpp"
 #include "ONNXSingleBinModel.hpp"
 #include <vector>
 
@@ -11,16 +12,15 @@ public:
     std::vector<float> InferSingle(std::vector<float> features, float momentuum);
     std::vector<std::vector<float>> InferMultiple(std::vector<std::vector<float>> features, std::vector<float> momentums);
 
+    std::vector<std::string> GetFeatureFieldNames();
+    std::array<size_t, 2> GetOutputTensorShape();
+    size_t GetOutputTensorSize();
+
 private:
-    struct BinConfig
-    {
-        float min;
-        float max;
-        std::string path;
-    };
-    static std::vector<BinConfig> ParseBinConfigs(std::string json_config_path);
     void LoadBinModels(std::vector<BinConfig>);
 
-    std::string json_config_path_;
     std::vector<ONNXSingleBinModel> bin_models_;
+    std::vector<std::string> feature_field_names_;
+    std::array<size_t, 2> output_tensor_shape_;
+    size_t output_tensor_size_;
 };
