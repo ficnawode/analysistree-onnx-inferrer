@@ -13,6 +13,8 @@ void ATreePredictionAdder::Init()
   auto out_config = AnalysisTree::TaskManager::GetInstance()->GetConfig();
 
   auto in_branch_cand = config_->GetBranchConfig(input_branch_name_);
+  std::string momentum_name = "p";
+  momentum_id_ = in_branch_cand.GetFieldId(momentum_name);
   AnalysisTree::BranchConfig out_particles = in_branch_cand.Clone(output_branch_name_, in_branch_cand.GetType());
 
   InitFeatureIds();
@@ -43,7 +45,7 @@ void ATreePredictionAdder::Init()
 
 void ATreePredictionAdder::FillOutputTensorShape()
 {
-  output_tensor_shape_ = onnx_runner_->GetOutputTensorShape();
+  output_tensor_shape_ = onnx_model_manager_->GetOutputTensorShape();
 }
 
 void ATreePredictionAdder::FillOutputTensorSize()
@@ -73,15 +75,7 @@ void ATreePredictionAdder::InitFeatureIds()
 
 void ATreePredictionAdder::InitModel()
 {
-  std::cout << "Loading ONNX model file " << model_file_name_ << std::endl;
-  onnx_runner_ = new ONNXRunner();
-  onnx_runner_->Init(model_file_name_, num_threads_);
-
-  if (onnx_runner_->GetFeatureCount() != feature_field_ids_.size())
-  {
-    std::cout << "ERROR: ONNX Model requires " << onnx_runner_->GetFeatureCount() << " features, but " << feature_field_ids_.size() << " are given!" << std::endl;
-    exit(-1);
-  }
+  onnx_model_manager_ = new ONNXConfigManager(onnx_config_path_);
 }
 
 void ATreePredictionAdder::Exec()
@@ -95,6 +89,7 @@ void ATreePredictionAdder::Exec()
   auto *man = AnalysisTree::TaskManager::GetInstance();
   auto *chain = man->GetChain();
   std::vector<std::vector<float>> onnxFeatureValues;
+  std::vector<float> onnxMomentumValues;
 
   for (auto &input_particle : *candidates_)
   {
@@ -107,11 +102,12 @@ void ATreePredictionAdder::Exec()
 
       particle_feature_values.push_back(feature_value);
     }
+    float momentum_value = input_particle.GetField<float>(momentum_id_);
     onnxFeatureValues.push_back(particle_feature_values);
+    onnxMomentumValues.push_back(momentum_value);
   }
-  // assert(onnxFeatureValues.size() > 0);
 
-  auto outputTensors = onnx_runner_->PredictMany(onnxFeatureValues);
+  auto outputTensors = onnx_model_manager_->InferMultiple(onnxFeatureValues, onnxMomentumValues);
 
   // Add predictions to output candidates
   auto in_branch_cand = config_->GetBranchConfig(input_branch_name_);
@@ -145,7 +141,11 @@ void ATreePredictionAdder::Exec()
 
 void ATreePredictionAdder::SetTensorFields(AnalysisTree::Particle particle, std::vector<float> tensor)
 {
-  assert(tensor.size() == output_tensor_buffer_size_);
+  if (tensor.size() != output_tensor_buffer_size_)
+  {
+    std::string error_message = std::to_string(tensor.size()) + "!=" + std::to_string(output_tensor_buffer_size_);
+    throw std::runtime_error(error_message);
+  }
   for (size_t i = 0; i < output_tensor_buffer_size_; i++)
   {
     particle.SetField(tensor[i], output_field_ids_[i]);

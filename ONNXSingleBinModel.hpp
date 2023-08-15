@@ -17,6 +17,7 @@ public:
     size_t GetOutputTensorSize();
 
     std::vector<float> InferSingle(std::vector<float> &feature_values);
+    std::string GetModelFilePath() { return model_file_path_; }
 
 private:
     void InitRunner();

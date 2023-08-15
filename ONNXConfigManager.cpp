@@ -25,7 +25,8 @@ std::vector<float> ONNXConfigManager::InferSingle(std::vector<float> features, f
             return bin_model.InferSingle(features);
         }
     }
-    return {};
+    std::vector<float> zeros(output_tensor_size_);
+    return zeros;
 }
 
 std::vector<std::vector<float>> ONNXConfigManager::InferMultiple(std::vector<std::vector<float>> features, std::vector<float> momentums)

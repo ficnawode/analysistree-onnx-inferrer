@@ -5,6 +5,7 @@
 #include "AnalysisTree/Detector.hpp"
 #include "AnalysisTree/Task.hpp"
 #include "ONNXRunner.hpp"
+#include "ONNXConfigManager.hpp"
 #include <array>
 
 class ATreePredictionAdder : public AnalysisTree::Task
@@ -25,9 +26,11 @@ public:
   void SetFeatureFieldNames(std::string feature_field_name_arg) { feature_field_names_ = stringSplit(feature_field_name_arg, ","); }
   void SetModelFileName(std::string model_file_name) { model_file_name_ = model_file_name; }
   void SetNumThreads(int num_threads) { num_threads_ = num_threads; }
+  void SetONNXConfigPath(std::string onnx_config_path) { onnx_config_path_ = onnx_config_path; }
 
 protected:
-  ONNXRunner *onnx_runner_;
+  ONNXConfigManager *onnx_model_manager_{nullptr};
+  std::string onnx_config_path_;
 
   // input branches
   AnalysisTree::Particles *candidates_{nullptr};
@@ -47,7 +50,7 @@ protected:
   //**** input fields ***********
   int mass2_first_field_id_r_{AnalysisTree::UndefValueInt};
   int mass2_second_field_id_r_{AnalysisTree::UndefValueInt};
-  // int generation_field_id_r_{AnalysisTree::UndefValueInt};
+  int momentum_id_{AnalysisTree::UndefValueInt};
   //*****************************
 
   //***** output fields *********

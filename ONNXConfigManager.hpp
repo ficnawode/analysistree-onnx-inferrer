@@ -9,7 +9,6 @@ public:
     ONNXConfigManager(std::string json_config_path);
     ~ONNXConfigManager() = default;
 
-    std::vector<float> InferSingle(std::vector<float> features, float momentuum);
     std::vector<std::vector<float>> InferMultiple(std::vector<std::vector<float>> features, std::vector<float> momentums);
 
     std::vector<std::string> GetFeatureFieldNames();
@@ -17,6 +16,7 @@ public:
     size_t GetOutputTensorSize();
 
 private:
+    std::vector<float> InferSingle(std::vector<float> features, float momentuum);
     void LoadBinModels(std::vector<BinConfig>);
 
     std::vector<ONNXSingleBinModel> bin_models_;
