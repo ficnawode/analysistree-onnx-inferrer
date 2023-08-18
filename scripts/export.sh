@@ -6,6 +6,7 @@ TFIC_DIR=/lustre/cbm/users/tfic
 
 #AnalysisTree
 source $TFIC_DIR/AnalysisTree/install/bin/AnalysisTreeConfig.sh
+export AnalysisTree_DIR=$TFIC_DIR/AnalysisTree/install
 
 #OnnxRuntime
 export OnnxRuntime_DIR=$TFIC_DIR/onnxruntime/install
